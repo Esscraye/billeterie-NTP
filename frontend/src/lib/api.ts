@@ -164,6 +164,23 @@ class ApiService {
     });
     return response.json();
   }
+
+  async simulateParallelReservations(seatId: number, customerNames: string[], serverIds: string[]): Promise<void> {
+  const promises = serverIds.map((serverId, index) => {
+    return this.reserveSeat(seatId, customerNames[index], serverId);
+  });
+
+  const results = await Promise.allSettled(promises);
+  console.log("Résultats de la simulation parallèle :");
+  results.forEach((result, i) => {
+    if (result.status === "fulfilled") {
+      console.log(`✅ ${serverIds[i]} (${customerNames[i]}): Réservation réussie`);
+    } else {
+      console.warn(`❌ ${serverIds[i]} (${customerNames[i]}): ${result.reason}`);
+    }
+  });
+}
+
 }
 
 export const apiService = new ApiService();

@@ -25,12 +25,12 @@ export default function ReservationForm({ selectedSeatId, onSuccess }: Reservati
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!selectedSeatId) {
       setError('Veuillez sélectionner un siège');
       return;
     }
-    
+
     if (!customerName.trim()) {
       setError('Veuillez saisir votre nom');
       return;
@@ -40,19 +40,43 @@ export default function ReservationForm({ selectedSeatId, onSuccess }: Reservati
       setLoading(true);
       setError(null);
       setSuccess(null);
-      
+
       await apiService.reserveSeat(selectedSeatId, customerName.trim(), serverId);
-      
+
       setSuccess(`Siège ${selectedSeatId} réservé avec succès pour ${customerName}!`);
       setCustomerName('');
       onSuccess();
-      
-      // Effacer le message de succès après 3 secondes
+
       setTimeout(() => setSuccess(null), 3000);
-      
-    } catch (err: unknown) {
-      const error = err as Error;
-      setError(error.message || 'Erreur lors de la réservation');
+    } catch (err) {
+      const typedError = err as Error;
+      setError(typedError.message || 'Erreur lors de la réservation');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSimulateConflict = async () => {
+    if (!selectedSeatId) return;
+
+    const seatId = selectedSeatId;
+    const names = ['Alice', 'Bob', 'Charlie'];
+    const serversToSimulate = ['server-2', 'server-3', 'server-4'];
+
+    try {
+      setLoading(true);
+      setError(null);
+      setSuccess(null);
+
+      await apiService.simulateParallelReservations(seatId, names, serversToSimulate);
+
+      setSuccess(`Réservations concurrentes simulées pour le siège ${seatId}`);
+      onSuccess();
+
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      const typedError = err as Error;
+      setError(typedError.message || 'Erreur de simulation');
     } finally {
       setLoading(false);
     }
@@ -61,13 +85,10 @@ export default function ReservationForm({ selectedSeatId, onSuccess }: Reservati
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <h2 className="text-xl font-semibold text-gray-800 mb-4">Réserver un Siège</h2>
-      
+
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Sélection du siège */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Siège sélectionné
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Siège sélectionné</label>
           <div className="p-3 bg-gray-50 rounded border">
             {selectedSeatId ? (
               <span className="text-blue-600 font-medium">Siège n°{selectedSeatId}</span>
@@ -77,7 +98,6 @@ export default function ReservationForm({ selectedSeatId, onSuccess }: Reservati
           </div>
         </div>
 
-        {/* Nom du client */}
         <div>
           <label htmlFor="customerName" className="block text-sm font-medium text-gray-700 mb-1">
             Nom du client
@@ -93,7 +113,6 @@ export default function ReservationForm({ selectedSeatId, onSuccess }: Reservati
           />
         </div>
 
-        {/* Sélection du serveur */}
         <div>
           <label htmlFor="serverId" className="block text-sm font-medium text-gray-700 mb-1">
             Serveur de réservation
@@ -111,25 +130,19 @@ export default function ReservationForm({ selectedSeatId, onSuccess }: Reservati
               </option>
             ))}
           </select>
-          <p className="text-xs text-gray-500 mt-1">
-            Choisissez le serveur qui traite votre réservation
-          </p>
+          <p className="text-xs text-gray-500 mt-1">Choisissez le serveur qui traite votre réservation</p>
         </div>
 
-        {/* Messages d'erreur et de succès */}
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-            {error}
-          </div>
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">{error}</div>
         )}
-        
+
         {success && (
           <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
             {success}
           </div>
         )}
 
-        {/* Bouton de soumission */}
         <button
           type="submit"
           disabled={!selectedSeatId || !customerName.trim() || loading}
@@ -150,8 +163,16 @@ export default function ReservationForm({ selectedSeatId, onSuccess }: Reservati
               Réservation en cours...
             </span>
           ) : (
-            'Réserver ce siège'
+            'Réserver ce siège...'
           )}
+        </button>
+        <button
+          type="submit"
+          onClick={handleSimulateConflict}
+          disabled={!selectedSeatId || loading}
+          className="mt-2 w-full py-2 px-4 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors"
+        >
+          💣 Simuler un conflit sur ce siège
         </button>
       </form>
     </div>

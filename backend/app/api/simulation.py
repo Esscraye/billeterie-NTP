@@ -4,9 +4,9 @@ from app.services.time_service import (
     set_time_offset, 
     remove_time_offset, 
     get_time_offset,
-    clear_all_offsets,
-    time_offsets
+    clear_all_offsets
 )
+from app.services.time_offsets_store import time_offsets  # 💥 Nouveau : import centralisé
 
 router = APIRouter()
 
@@ -14,7 +14,6 @@ router = APIRouter()
 def set_server_time_offset(request: SimulationRequest):
     """Définir un décalage temporel pour un serveur"""
     set_time_offset(request.server_id, request.offset_seconds)
-    
     return {
         "message": f"Time offset set for {request.server_id}",
         "server_id": request.server_id,
@@ -25,7 +24,6 @@ def set_server_time_offset(request: SimulationRequest):
 def remove_server_time_offset(server_id: str):
     """Supprimer le décalage temporel d'un serveur"""
     remove_time_offset(server_id)
-    
     return {
         "message": f"Time offset removed for {server_id}",
         "server_id": server_id
@@ -42,17 +40,14 @@ def get_all_offsets():
 @router.post("/start-demo")
 def start_demo_simulation():
     """Démarrer une simulation de démonstration"""
-    # Configurer différents décalages pour plusieurs serveurs
     demo_offsets = {
-        "server-1": 0.0,      # Serveur de référence
-        "server-2": -5.0,     # 5 secondes en retard
-        "server-3": 3.0,      # 3 secondes en avance
-        "server-4": -2.0,     # 2 secondes en retard
+        "server-1": 0.0,
+        "server-2": -5.0,
+        "server-3": 3.0,
+        "server-4": -2.0,
     }
-    
     for server_id, offset in demo_offsets.items():
         set_time_offset(server_id, offset)
-    
     return {
         "message": "Demo simulation started",
         "servers_configured": demo_offsets
@@ -62,7 +57,6 @@ def start_demo_simulation():
 def stop_simulation():
     """Arrêter toutes les simulations"""
     clear_all_offsets()
-    
     return {
         "message": "All simulations stopped",
         "servers_reset": True
@@ -71,7 +65,7 @@ def stop_simulation():
 @router.get("/scenarios")
 def get_simulation_scenarios():
     """Obtenir les scénarios de simulation prédéfinis"""
-    scenarios = {
+    return {
         "minor_drift": {
             "description": "Léger décalage temporel",
             "servers": {
@@ -100,8 +94,6 @@ def get_simulation_scenarios():
             }
         }
     }
-    
-    return scenarios
 
 @router.post("/apply-scenario/{scenario_name}")
 def apply_scenario(scenario_name: str):
@@ -126,15 +118,14 @@ def apply_scenario(scenario_name: str):
             "server-5": 12.0
         }
     }
-    
+
     if scenario_name not in scenarios:
         return {"error": "Scenario not found"}
-    
-    # Appliquer les décalages du scénario
+
     scenario_offsets = scenarios[scenario_name]
     for server_id, offset in scenario_offsets.items():
         set_time_offset(server_id, offset)
-    
+
     return {
         "message": f"Scenario '{scenario_name}' applied successfully",
         "servers_configured": scenario_offsets

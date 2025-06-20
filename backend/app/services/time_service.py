@@ -2,9 +2,7 @@ import ntplib
 from datetime import datetime, timedelta
 import time
 from typing import Tuple
-
-# Simulateur de décalages temporels
-time_offsets = {}
+from app.services.time_offsets_store import time_offsets
 
 def get_current_time(server_id: str = "server-1") -> Tuple[datetime, bool, float]:
     """
