@@ -9,7 +9,7 @@ from app.core.database import get_db
 from app.models import Reservation as ReservationModel, Seat as SeatModel, Conflict as ConflictModel
 from app.schemas import Reservation, ReservationCreate, Conflict
 from app.services.time_service import get_current_time
-from app.services.time_offsets_store import time_offsets  # ✅ lecture des offsets
+from app.services.time_offsets_store import time_offsets
 
 router = APIRouter()
 
